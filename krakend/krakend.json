@@ -2,18 +2,20 @@
   "version": 2,
   "timeout": "3000ms",
   "cache_ttl": "300s",
-  "host": [ "http://fake_api:8080" ],
+  "host": [
+    "http://fake_api:8080"
+  ],
   "extra_config": {
     "github_com/devopsfaith/krakend-metrics": {
       "collection_time": "30s",
-      "listen_address":":8090"
+      "listen_address": ":8090"
     },
-    "github_com/letgoapp/krakend-influx":{
-      "address":"http://influxdb:8086",
-      "ttl":"25s"
+    "github_com/letgoapp/krakend-influx": {
+      "address": "http://influxdb:8086",
+      "ttl": "25s"
     },
     "github_com/devopsfaith/krakend-gologging": {
-      "level":  "DEBUG",
+      "level": "DEBUG",
       "prefix": "[KRAKEND]",
       "syslog": false,
       "stdout": true
@@ -24,15 +26,35 @@
       "exporters": {
         "jaeger": {
           "endpoint": "http://jaeger:14268/api/traces",
-          "service_name":"krakend"
+          "service_name": "krakend"
         }
       }
     },
     "github_com/devopsfaith/krakend-cors": {
-      "allow_origins": [ "http://localhost:8080", "http://localhost:3000", "http://192.168.99.100:3000" ],
-      "allow_methods": [ "POST", "GET" ],
-      "allow_headers": ["Origin","Authorization","Content-Type"],
-      "expose_headers": ["Content-Length"],
+      "allow_origins": [
+        "http://localhost:8080",
+        "http://localhost:3000",
+        "http://192.168.99.100:3000"
+      ],
+      "allow_methods": [
+        "GET",
+        "HEAD",
+        "POST",
+        "PUT",
+        "DELETE",
+        "CONNECT",
+        "OPTIONS",
+        "TRACE",
+        "PATCH"
+      ],
+      "allow_headers": [
+        "Origin",
+        "Authorization",
+        "Content-Type"
+      ],
+      "expose_headers": [
+        "Content-Length"
+      ],
       "max_age": "12h"
     },
     "github_com/devopsfaith/bloomfilter": {
@@ -41,152 +63,272 @@
       "HashName": "optimal",
       "TTL": 1500,
       "port": 1234,
-      "TokenKeys": ["jti"]
+      "TokenKeys": [
+        "jti"
+      ]
     }
+  },
+  "github_com/devopsfaith/krakend-cors": {
+    "allow_origins": [
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "http://192.168.99.100:3000"
+    ],
+    "allow_methods": [
+      "POST",
+      "GET"
+    ],
+    "allow_headers": [
+      "Origin",
+      "Authorization",
+      "Content-Type"
+    ],
+    "expose_headers": [
+      "Content-Length"
+    ],
+    "max_age": "12h"
+  },
+  "github_com/devopsfaith/bloomfilter": {
+    "N": 10000000,
+    "P": 0.0000001,
+    "HashName": "optimal",
+    "TTL": 1500,
+    "port": 1234,
+    "TokenKeys": [
+      "jti"
+    ]
   },
   "endpoints": [
     {
-      "endpoint": "/splash",
+      "endpoint": "/anakin/dashboard",
+      "method": "GET",
       "backend": [
         {
-          "url_pattern": "/shop/campaigns.json",
-          "whitelist": [ "campaigns" ]
-        },
-        {
-          "url_pattern": "/shop/products.json",
-          "whitelist": [ "products" ],
+          "url_pattern": "/api/noc/outages?status=OPEN",
+          "encoding": "json",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "group": "outages",
           "extra_config": {
-              "github.com/devopsfaith/krakend-ratelimit/juju/proxy": {
-                  "maxRate": 1,
-                  "capacity": 1
-              }
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
           }
-        }
-      ],
-      "extra_config": {
-          "github.com/devopsfaith/krakend-ratelimit/juju/router": {
-              "maxRate": 2
-          }
-      }
-    },
-    {
-      "endpoint": "/sequential",
-      "backend": [
-        {
-          "url_pattern": "/hotels/1.json",
-          "whitelist": [ "destination_id" ]
         },
         {
-          "url_pattern": "/destinations/{resp0_destination_id}.json"
-        }
-      ],
-      "extra_config": {
-          "github.com/devopsfaith/krakend/proxy": {
-            "sequential": true
-          }
-      }
-    },
-    {
-      "endpoint": "/fail",
-      "backend": [
-        {
-          "url_pattern": "/user/1.json",
-          "group": "user"
-        },
-        {
-          "host": [ "http://fake_url_that_should_not_resolve.tld" ],
-          "url_pattern": "/",
-          "group": "none"
-        }
-      ]
-    },
-    {
-      "endpoint": "/public",
-      "backend": [
-        {
-          "host": [ "https://api.github.com" ],
-          "url_pattern": "/users/kpacha",
-          "whitelist": [
-            "avatar_url",
-            "name",
-            "company",
-            "blog",
-            "location",
-            "mail",
-            "hireable",
-            "followers",
-            "public_repos",
-            "public_gists"
+          "url_pattern": "/api/syslog/logs",
+          "encoding": "json",
+          "host": [
+            "http://localhost:5009"
           ],
-          "mapping": { "blog": "website" },
-          "group": "github"
+          "group": "logs",
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
         },
         {
-          "host": [ "https://api.bitbucket.org" ],
-          "url_pattern": "/2.0/users/kpacha",
-          "whitelist": [
-            "links.avatar",
-            "display_name",
-            "website",
-            "location"
+          "url_pattern": "/api/syslog/downs",
+          "encoding": "json",
+          "host": [
+            "http://localhost:5009"
           ],
-          "mapping": { "display_name": "name" },
-          "group": "bitbucket"
-        }
-      ]
-    },
-    {
-      "endpoint": "/private/auth0",
-      "backend": [
-        {
-          "url_pattern": "/user/1.json"
-        }
-      ],
-      "extra_config": {
-        "github.com/devopsfaith/krakend-jose/validator": {
-          "alg": "RS256",
-          "audience": ["http://api.example.com"],
-          "roles_key": "http://api.example.com/custom/roles",
-          "roles": ["user", "admin"],
-          "jwk-url": "https://albert-test.auth0.com/.well-known/jwks.json"
-        }
-      }
-    },
-    {
-      "endpoint": "/private/custom",
-      "backend": [
-        {
-          "url_pattern": "/user/1.json"
+          "mapping": {
+            "collection": "downs"
+          },
+          "is_collection": "true",
+          "group": "downs",
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
         }
       ],
-      "extra_config": {
-        "github.com/devopsfaith/krakend-jose/validator": {
-          "alg": "HS256",
-          "audience": ["http://api.example.com"],
-          "roles_key": "roles",
-          "issuer": "https://krakend.io",
-          "roles": ["role_a", "role_c"],
-          "jwk-url": "http://fake_api:8080/jwk/symmetric.json",
-          "disable_jwk_security": true
-        }
-      }
+      "extra_config": {}
     },
     {
-      "endpoint": "/token",
+      "endpoint": "/anakin/thresholds",
+      "method": "GET",
       "backend": [
         {
-          "url_pattern": "/token.json"
+          "url_pattern": "/api/syslog/thresholds",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
         }
       ],
-      "extra_config": {
-        "github.com/devopsfaith/krakend-jose/signer": {
-          "alg": "HS256",
-          "kid": "sim2",
-          "keys-to-sign": ["access_token", "refresh_token"],
-          "jwk-url": "http://fake_api:8080/jwk/symmetric.json",
-          "disable_jwk_security": true
+      "extra_config": {}
+    },
+    {
+      "endpoint": "/anakin/downs",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/api/syslog/downs",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "is_collection": "true",
+          "mapping": {
+            "collection": "downs"
+          },
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
         }
-      }
+      ],
+      "extra_config": {}
+    },
+    {
+      "endpoint": "/anakin/histories",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/api/syslog/histories",
+          "is_collection": "true",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "mapping": {
+            "collection": "histories"
+          },
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
+        }
+      ],
+      "extra_config": {}
+    },
+    {
+      "endpoint": "/anakin/outages",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/api/noc/outages",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "mapping": {
+            "collection": "outages"
+          },
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
+        }
+      ],
+      "extra_config": {}
+    },
+    {
+      "endpoint": "/anakin/outages/{id}",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/api/noc/outages/{id}",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "mapping": {
+            "collection": "outages"
+          },
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
+        }
+      ],
+      "extra_config": {}
+    },
+    {
+      "endpoint": "/anakin/noc",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/api/noc",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
+        }
+      ],
+      "extra_config": {}
+    },
+    {
+      "endpoint": "/anakin/noc/{id}/close",
+      "method": "PATCH",
+      "backend": [
+        {
+          "url_pattern": "/api/noc/{id}/close",
+          "host": [
+            "http://localhost:5009"
+          ],
+          "extra_config": {
+            "github.com/devopsfaith/krakend-circuitbreaker/gobreaker": {
+              "interval": 60,
+              "name": "circuit-breaker-1",
+              "timeout": 10,
+              "maxErrors": 3,
+              "logStatusChange": true
+            }
+          }
+        }
+      ],
+      "extra_config": {}
     }
-  ]
+  ],
+  "output_encoding": "json"
 }

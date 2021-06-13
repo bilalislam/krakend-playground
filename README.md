@@ -68,6 +68,10 @@ Just:
 
     docker-compose up
 
+Or with cli
+
+    krakend run -c krakend/krakend.json
+
 ## Play!
 Fire up your browser, curl, postman, httpie or anything else you like to interact with any of the published services.
 
