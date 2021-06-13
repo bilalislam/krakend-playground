@@ -34,6 +34,9 @@ You can drag the file `krakend/krakend.json` anytime in the dashboard and resume
 
 Runs on [http://localhost:8787](http://localhost:8787)
 
+
+![KrakenD Designer](designer.png)
+
 ### The gateway!
 An instance of KrakenD with several endpoints. Its configuration is in the folder `krakend/`.
 
